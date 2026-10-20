@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,23 @@ class Borrowing extends Model
             'due_at' => 'date',
             'returned_at' => 'date',
         ];
+    }
+
+    // Not yet returned
+    public function scopeActive(Builder $query): void
+    {
+        $query->whereNull('returned_at');
+    }
+
+    // Not returned and past its due date
+    public function scopeOverdue(Builder $query): void
+    {
+        $query->whereNull('returned_at')->whereDate('due_at', '<', today());
+    }
+
+    public function isOverdue(): bool
+    {
+        return $this->returned_at === null && $this->due_at->lt(today());
     }
 
     public function client(): BelongsTo
